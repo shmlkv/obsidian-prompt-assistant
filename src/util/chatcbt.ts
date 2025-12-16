@@ -1,10 +1,9 @@
-import { requestUrl } from 'obsidian';
-import summaryPrompt from '../prompts/summary';
+import { Notice, requestUrl } from 'obsidian';
 import {
-	OPENROUTER_DEFAULT_MODEL,
 	AI_PROVIDERS,
+	OPENROUTER_DEFAULT_MODEL,
 } from '../constants';
-import { Notice } from 'obsidian';
+import summaryPrompt from '../prompts/summary';
 
 const defaultPromptPrefix = (lang: string) =>
 	`Respond to the user in ${lang}.\n`;
@@ -26,7 +25,7 @@ export interface ChatInput {
 }
 
 export class PromptAssistant {
-	constructor() {}
+	constructor() { }
 
 	async chat({
 		openRouterApiKey,

@@ -23,4 +23,4 @@ function buildAssistantMsg(text: string, assistantName: string = 'Assistant') {
 	return CHAT_DELIMETER + `${agentMarker} ${text}` + CHAT_DELIMETER;
 }
 
-export { convertTextToMsg, buildAssistantMsg };
+export { buildAssistantMsg, convertTextToMsg };

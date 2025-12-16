@@ -1,23 +1,22 @@
 import {
 	App,
+	Component,
 	Editor,
+	MarkdownRenderer,
 	MarkdownView,
+	Menu,
 	Modal,
 	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
-	Menu,
-	MarkdownRenderer,
-	Component,
 } from 'obsidian';
-import { PromptAssistant, Mode } from './util/chatcbt';
+import { AI_PROVIDERS, OPENROUTER_DEFAULT_MODEL } from './constants';
+import defaultSystemPrompt from './prompts/system';
+import { Mode, PromptAssistant } from './util/chatcbt';
+import { languages } from './util/languages';
 import { buildAssistantMsg, convertTextToMsg } from './util/messages';
 import { platformBasedSecrets } from './util/platformBasedSecrets';
-import { OPENROUTER_DEFAULT_MODEL } from './constants';
-import { languages } from './util/languages';
-import defaultSystemPrompt from './prompts/system';
-import { AI_PROVIDERS } from './constants';
 
 /** Interfaces */
 interface CustomPrompt {
@@ -101,11 +100,8 @@ export default class PromptAssistantPlugin extends Plugin {
 		await this.loadSettings();
 		console.debug('[PromptAssistant] Settings loaded. Mode:', this.settings.mode, 'Model:', this.settings.openRouterModel || 'default');
 
-		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('bot-message-square', 'AI Chat Assistant', (evt: MouseEvent) => {
 			const menu = new Menu();
-
-			const model = this.getCurrentModel();
 
 			menu.addItem((item) =>
 				item
