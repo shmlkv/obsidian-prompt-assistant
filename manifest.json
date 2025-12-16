@@ -1,12 +1,11 @@
 {
 	"id": "prompt-assistant",
-	"name": "Prompt Assistant",
-	"version": "3.0.0",
+	"name": "Prompt Assistant (Openrouter)",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "AI chat assistant with customizable prompts for journaling, coaching, writing, and more",
+	"description": "AI chat assistant with customizable prompts for journaling, coaching, writing, and more using Openrouter",
 	"author": "shmlkv",
 	"authorUrl": "https://github.com/shmlkv",
-	"fundingUrl": "https://www.buymeacoffee.com/shmlkv",
 	"platforms": [
 		"desktop",
 		"mobile"
