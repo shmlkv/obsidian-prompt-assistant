@@ -30,7 +30,6 @@ interface PromptAssistantPluginSettings {
 	openRouterApiKey: string;
 	mode: AI_PROVIDERS;
 	language: string;
-	prompt: string;
 	openRouterModel: string;
 	assistantName: string;
 	customPrompts: CustomPrompt[];
@@ -85,9 +84,8 @@ const DEFAULT_SETTINGS: PromptAssistantPluginSettings = {
 	openRouterApiKey: '',
 	mode: AI_PROVIDERS.OPENROUTER,
 	language: DEFAULT_LANG,
-	prompt: defaultSystemPrompt,
 	openRouterModel: '',
-	assistantName: 'Prompt Assistant',
+	assistantName: 'Assistant',
 	customPrompts: [],
 };
 
@@ -104,7 +102,7 @@ export default class PromptAssistantPlugin extends Plugin {
 		console.debug('[PromptAssistant] Settings loaded. Mode:', this.settings.mode, 'Model:', this.settings.openRouterModel || 'default');
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('heart-handshake', 'Prompt assistant', (evt: MouseEvent) => {
+		this.addRibbonIcon('bot-message-square', 'AI Chat Assistant', (evt: MouseEvent) => {
 			const menu = new Menu();
 
 			const model = this.getCurrentModel();
@@ -265,7 +263,7 @@ export default class PromptAssistantPlugin extends Plugin {
 
 		if (!Object.values(AI_PROVIDERS).includes(this.settings.mode)) {
 			new Notice(
-				`Invalid mode '${this.settings.mode}' detected. Update in Prompt Assistant plugin settings and select a valid mode`,
+				`Invalid mode '${this.settings.mode}' detected. Update in AI Chat Assistant plugin settings and select a valid mode`,
 			);
 			return;
 		}
@@ -274,7 +272,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			this.settings.mode === AI_PROVIDERS.OPENROUTER &&
 			!this.settings.openRouterApiKey
 		) {
-			new Notice('Missing OpenRouter API key - update in Prompt assistant plugin settings');
+			new Notice('Missing OpenRouter API key - update in AI Chat Assistant plugin settings');
 			return;
 		}
 
@@ -316,11 +314,11 @@ export default class PromptAssistantPlugin extends Plugin {
 				mode: this.settings.mode as Mode,
 				model: selectedModel,
 				language: this.settings.language,
-				prompt: this.settings.prompt,
+				prompt: defaultSystemPrompt,
 			});
 			response = res;
 		} catch (e: unknown) {
-			console.error('Prompt Assistant error:', e);
+			console.error('AI Chat Assistant error:', e);
 
 			let errorMsg = 'An error occurred while processing your request.';
 			const error = e as ApiError;
@@ -340,7 +338,7 @@ export default class PromptAssistantPlugin extends Plugin {
 				}
 			}
 
-			new Notice(`Prompt Assistant Error: ${errorMsg}`, 10000);
+			new Notice(`AI Chat Assistant Error: ${errorMsg}`, 10000);
 		} finally {
 			loadingModal.close();
 		}
@@ -386,6 +384,20 @@ class MySettingTab extends PluginSettingTab {
 		containerEl.createEl('br');
 		containerEl.createEl('br');
 
+		// ASSISTANT NAME
+		new Setting(containerEl)
+			.setName('Assistant name')
+			.setDesc('Name that appears in responses (e.g., Assistant, Claude, GPT)')
+			.addText((text) =>
+				text
+					.setPlaceholder('Assistant')
+					.setValue(this.plugin.settings.assistantName)
+					.onChange(async (value) => {
+						this.plugin.settings.assistantName = value.trim() || 'Assistant';
+						await this.plugin.saveSettings();
+					}),
+			);
+
 		// OPENROUTER MODEL
 		new Setting(containerEl)
 			.setName('OpenRouter model')
@@ -400,19 +412,14 @@ class MySettingTab extends PluginSettingTab {
 					}),
 			);
 
-		// ASSISTANT NAME
-		new Setting(containerEl)
-			.setName('Assistant name')
-			.setDesc('Name that appears in responses (e.g., Assistant, Claude, GPT)')
-			.addText((text) =>
-				text
-					.setPlaceholder('Prompt assistant')
-					.setValue(this.plugin.settings.assistantName)
-					.onChange(async (value) => {
-						this.plugin.settings.assistantName = value.trim() || 'Prompt Assistant';
-						await this.plugin.saveSettings();
-					}),
-			);
+		const modelsLinkEl = containerEl.createEl('a', {
+			href: 'https://openrouter.ai/models',
+			text: 'Browse available models',
+		});
+		modelsLinkEl.target = '_blank';
+		modelsLinkEl.addClass('prompt-assistant-link');
+		containerEl.createEl('br');
+		containerEl.createEl('br');
 
 		// OPENROUTER API KEY
 		new Setting(containerEl)
@@ -438,26 +445,14 @@ class MySettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const openRouterLinkboxEl = document.createElement('div');
-
-		const link = openRouterLinkboxEl.createEl('a');
-		link.textContent = 'Get OpenRouter API key';
-		link.href = 'https://openrouter.ai/keys';
-		link.target = '_blank';
-		link.addClass('prompt-assistant-link');
-
-		openRouterLinkboxEl.createEl('br');
-
-		const modelsLink = openRouterLinkboxEl.createEl('a');
-		modelsLink.textContent = 'Browse available models';
-		modelsLink.href = 'https://openrouter.ai/models';
-		modelsLink.target = '_blank';
-		modelsLink.addClass('prompt-assistant-link');
-
-		openRouterLinkboxEl.createEl('br');
-		openRouterLinkboxEl.createEl('br');
-
-		containerEl.appendChild(openRouterLinkboxEl);
+		const apiKeyLinkEl = containerEl.createEl('a', {
+			href: 'https://openrouter.ai/keys',
+			text: 'Get OpenRouter API key',
+		});
+		apiKeyLinkEl.target = '_blank';
+		apiKeyLinkEl.addClass('prompt-assistant-link');
+		containerEl.createEl('br');
+		containerEl.createEl('br');
 
 		// CUSTOM PROMPTS SECTION
 		new Setting(containerEl)
@@ -547,62 +542,6 @@ class MySettingTab extends PluginSettingTab {
 					});
 			});
 
-		// SYSTEM PROMPT
-		const promptSetting = new Setting(containerEl)
-			.setName('Edit system prompt')
-			.setDesc('Customize the prompt that controls how the assistant responds to you')
-			.setClass('prompt-assistant-setting');
-
-		promptSetting.addTextArea((text) => {
-			text.setValue(this.plugin.settings.prompt).onChange(async (value) => {
-				this.plugin.settings.prompt = value;
-				updateResetButtonVisibility(value);
-				await this.plugin.saveSettings();
-			});
-
-			text.inputEl.addClass('prompt-assistant-textarea');
-
-			return text;
-		});
-
-		const buttonContainer = containerEl.createDiv('prompt-assistant-button-container');
-
-		const resetButton = new Setting(buttonContainer).addButton((button) => {
-			button.setButtonText('Reset to default').onClick(async () => {
-				const confirmReset = confirm(
-					"Are you sure you want to reset the prompt to default? You'll lose your custom prompt.",
-				);
-
-				if (confirmReset) {
-					this.plugin.settings.prompt = defaultSystemPrompt;
-
-					const textareaElement = containerEl.querySelector(
-						'.prompt-assistant-textarea',
-					) as HTMLTextAreaElement;
-					if (textareaElement) {
-						textareaElement.value = defaultSystemPrompt;
-					}
-
-					await this.plugin.saveSettings();
-					new Notice('System prompt reset to default');
-
-					// Update button visibility
-					updateResetButtonVisibility(defaultSystemPrompt);
-				}
-			});
-
-			return button;
-		});
-
-		const updateResetButtonVisibility = (value: string) => {
-			const shouldShow = value !== defaultSystemPrompt;
-			buttonContainer.style.display = shouldShow ? 'flex' : 'none';
-		};
-		// hide the reset button setting's name/desc elements
-		resetButton.nameEl.remove();
-		resetButton.controlEl.addClass('prompt-assistant-reset-button-control');
-		// run this on initial settings load
-		updateResetButtonVisibility(this.plugin.settings.prompt);
 	}
 }
 

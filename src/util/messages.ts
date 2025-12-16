@@ -1,7 +1,7 @@
 import { CHAT_DELIMETER } from '../constants';
 import { escapeDangerousCharacters } from './parsers';
 
-function convertTextToMsg(text: string, assistantName: string = 'Prompt Assistant') {
+function convertTextToMsg(text: string, assistantName: string = 'Assistant') {
 	const agentMarker = `**${assistantName}:**`;
 	const agentMarkerRegex = new RegExp(
 		`^${escapeDangerousCharacters(agentMarker)}`,
@@ -18,7 +18,7 @@ function convertTextToMsg(text: string, assistantName: string = 'Prompt Assistan
 	}
 }
 
-function buildAssistantMsg(text: string, assistantName: string = 'Prompt Assistant') {
+function buildAssistantMsg(text: string, assistantName: string = 'Assistant') {
 	const agentMarker = `**${assistantName}:**`;
 	return CHAT_DELIMETER + `${agentMarker} ${text}` + CHAT_DELIMETER;
 }

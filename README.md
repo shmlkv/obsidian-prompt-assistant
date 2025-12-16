@@ -1,6 +1,6 @@
-# Prompt Assistant
+# AI Chat Assistant (OpenRouter)
 
-AI chat assistant for Obsidian with customizable prompts for any workflow.
+AI chat assistant for Obsidian with customizable prompts for any workflow. Supports ChatGPT, DeepSeek, Gemini, Claude, and 100+ other models.
 
 ![Custom Prompts](docs/Screenshot%202025-10-16%20at%2023.58.15.png)
 
@@ -39,7 +39,7 @@ The plugin comes with default CBT (Cognitive Behavioral Therapy) prompts as exam
 
 ## Setup
 
-Prompt Assistant uses [OpenRouter](https://openrouter.ai/) to access AI models.
+AI Chat Assistant uses [OpenRouter](https://openrouter.ai/) to access AI models.
 
 ### Getting Started
 
@@ -52,7 +52,7 @@ Prompt Assistant uses [OpenRouter](https://openrouter.ai/) to access AI models.
    - Create a new key and copy it
 
 3. **Configure the plugin**
-   - Open Obsidian Settings → Prompt Assistant
+   - Open Obsidian Settings → AI Chat Assistant
    - Paste your OpenRouter API key
    - Choose a model (default: `openai/gpt-4o-mini`)
 
@@ -82,7 +82,7 @@ Browse models at [openrouter.ai/models](https://openrouter.ai/models)
 
 Create prompts for your specific needs:
 
-1. Open Settings → Prompt Assistant → Custom Prompts
+1. Open Settings → AI Chat Assistant → Custom Prompts
 2. Click "Add Prompt"
 3. Enter a name (appears in menu and as a command)
 4. Write your prompt
@@ -100,7 +100,7 @@ Create prompts for your specific needs:
 
 ### Running Commands
 
-**Ribbon menu** - Click the Prompt Assistant icon
+**Ribbon menu** - Click the AI Chat Assistant icon
 
 **Command Palette** - `Cmd/Ctrl + P` → search for prompt name
 
@@ -108,7 +108,7 @@ Create prompts for your specific needs:
 
 ### System Prompt
 
-Customize how the AI responds in Settings → Prompt Assistant → Edit System Prompt.
+Customize how the AI responds in Settings → AI Chat Assistant → Edit System Prompt.
 
 The default prompt is configured for CBT-style questioning, but you can change it to anything.
 

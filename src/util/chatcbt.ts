@@ -92,7 +92,7 @@ export class PromptAssistant {
 		// Add OpenRouter-specific headers
 		if (url.includes('openrouter.ai')) {
 			headers['HTTP-Referer'] = 'https://github.com/shmlkv/obsidian-prompt-assistant';
-			headers['X-Title'] = 'Prompt Assistant Obsidian Plugin';
+			headers['X-Title'] = 'AI Chat Assistant Obsidian Plugin';
 		}
 
 		const options = {
