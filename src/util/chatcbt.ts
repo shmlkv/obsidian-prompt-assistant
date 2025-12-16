@@ -59,14 +59,14 @@ export class PromptAssistant {
 
 		if (mode === AI_PROVIDERS.OPENROUTER && !!openRouterApiKey) {
 			const url = 'https://openrouter.ai/api/v1/chat/completions';
-			console.log('[PromptAssistant] Making request to OpenRouter with model:', model || OPENROUTER_DEFAULT_MODEL);
+			console.debug('[PromptAssistant] Making request to OpenRouter with model:', model || OPENROUTER_DEFAULT_MODEL);
 			response = await this._chat(
 				url,
 				msgs,
 				openRouterApiKey,
 				model || OPENROUTER_DEFAULT_MODEL,
 			);
-			console.log('[PromptAssistant] Received response from OpenRouter');
+			console.debug('[PromptAssistant] Received response from OpenRouter');
 		}
 
 		return response;
@@ -120,17 +120,18 @@ export class PromptAssistant {
 			}
 
 			return response.json.choices[0].message.content;
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Enhance error message for common issues
-			if (error.status === 401) {
+			const err = error as { status?: number };
+			if (err.status === 401) {
 				throw new Error('Invalid API key. Please check your OpenRouter API key in settings.');
-			} else if (error.status === 403) {
+			} else if (err.status === 403) {
 				throw new Error('Access forbidden. Please verify your OpenRouter API key has proper permissions.');
-			} else if (error.status === 404) {
+			} else if (err.status === 404) {
 				throw new Error(`Model '${model}' not found. Please check the model name in settings.`);
-			} else if (error.status === 429) {
+			} else if (err.status === 429) {
 				throw new Error('Rate limit exceeded. Please try again later.');
-			} else if (error.status >= 500) {
+			} else if (err.status && err.status >= 500) {
 				throw new Error('OpenRouter service error. Please try again later.');
 			}
 			throw error;

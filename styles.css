@@ -32,3 +32,7 @@
 .prompt-assistant-reset-button-control {
 	padding: 0;
 }
+
+.prompt-assistant-link {
+	text-decoration: underline;
+}

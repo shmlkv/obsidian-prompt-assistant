@@ -42,6 +42,19 @@ interface PromptAssistantResponseInput {
 	customPrompt?: string;
 }
 
+interface LegacySettings {
+	openAiApiKey?: string;
+	deepseekApiKey?: string;
+	openaiModel?: string;
+	deepseekModel?: string;
+	ollamaModel?: string;
+}
+
+interface ApiError {
+	message?: string;
+	status?: number;
+}
+
 /** Constants */
 const DEFAULT_LANG = 'English';
 
@@ -85,13 +98,13 @@ export default class PromptAssistantPlugin extends Plugin {
 	settings: PromptAssistantPluginSettings;
 
 	async onload() {
-		console.log('[PromptAssistant] Loading plugin...');
+		console.debug('[PromptAssistant] Loading plugin...');
 
 		await this.loadSettings();
-		console.log('[PromptAssistant] Settings loaded. Mode:', this.settings.mode, 'Model:', this.settings.openRouterModel || 'default');
+		console.debug('[PromptAssistant] Settings loaded. Mode:', this.settings.mode, 'Model:', this.settings.openRouterModel || 'default');
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('heart-handshake', 'Prompt Assistant', (evt: MouseEvent) => {
+		this.addRibbonIcon('heart-handshake', 'Prompt assistant', (evt: MouseEvent) => {
 			const menu = new Menu();
 
 			const model = this.getCurrentModel();
@@ -116,8 +129,8 @@ export default class PromptAssistantPlugin extends Plugin {
 				item
 					.setTitle(`Summarize`)
 					.setIcon('table')
-					.onClick(() => {
-						this.getPromptAssistantSummary();
+					.onClick(async () => {
+						await this.getPromptAssistantSummary();
 					}),
 			);
 
@@ -152,7 +165,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			id: 'chat',
 			name: 'Chat',
 			editorCallback: (_editor: Editor, _view: MarkdownView) => {
-				this.getPromptAssistantResponse({
+				void this.getPromptAssistantResponse({
 					isSummary: false,
 					mode: this.settings.mode as Mode,
 				});
@@ -163,7 +176,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			id: 'summarize',
 			name: 'Summarize',
 			editorCallback: (_editor: Editor, _view: MarkdownView) => {
-				this.getPromptAssistantSummary();
+				void this.getPromptAssistantSummary();
 			},
 		});
 
@@ -173,7 +186,7 @@ export default class PromptAssistantPlugin extends Plugin {
 				id: `custom-prompt-${customPrompt.id}`,
 				name: customPrompt.name,
 				editorCallback: (_editor: Editor, _view: MarkdownView) => {
-					this.getPromptAssistantResponse({
+					void this.getPromptAssistantResponse({
 						isSummary: false,
 						mode: this.settings.mode as Mode,
 						customPrompt: customPrompt.prompt,
@@ -188,11 +201,11 @@ export default class PromptAssistantPlugin extends Plugin {
 
 	/** Run when plugin is disabled */
 	onunload() {
-		console.log('unloading plugin');
+		console.debug('unloading plugin');
 	}
 
 	async loadSettings() {
-		const loadedData = await this.loadData();
+		const loadedData = await this.loadData() as (PromptAssistantPluginSettings & LegacySettings) | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
 		// Migrate old settings to OpenRouter
@@ -212,25 +225,24 @@ export default class PromptAssistantPlugin extends Plugin {
 
 		// Migrate old API keys to OpenRouter if present
 		if (loadedData) {
-			const oldData = loadedData as any;
-			if ((oldData.openAiApiKey || oldData.deepseekApiKey) && !this.settings.openRouterApiKey) {
+			if ((loadedData.openAiApiKey || loadedData.deepseekApiKey) && !this.settings.openRouterApiKey) {
 				// Use OpenAI key as default if present
-				if (oldData.openAiApiKey) {
-					this.settings.openRouterApiKey = oldData.openAiApiKey;
+				if (loadedData.openAiApiKey) {
+					this.settings.openRouterApiKey = loadedData.openAiApiKey;
 					needsSave = true;
-				} else if (oldData.deepseekApiKey) {
-					this.settings.openRouterApiKey = oldData.deepseekApiKey;
+				} else if (loadedData.deepseekApiKey) {
+					this.settings.openRouterApiKey = loadedData.deepseekApiKey;
 					needsSave = true;
 				}
 			}
 
 			// Migrate model settings
-			if ((oldData.openaiModel || oldData.deepseekModel || oldData.ollamaModel) && !this.settings.openRouterModel) {
-				if (oldData.openaiModel) {
+			if ((loadedData.openaiModel || loadedData.deepseekModel || loadedData.ollamaModel) && !this.settings.openRouterModel) {
+				if (loadedData.openaiModel) {
 					// Convert OpenAI model to OpenRouter format
-					this.settings.openRouterModel = oldData.openaiModel.includes('/')
-						? oldData.openaiModel
-						: `openai/${oldData.openaiModel}`;
+					this.settings.openRouterModel = loadedData.openaiModel.includes('/')
+						? loadedData.openaiModel
+						: `openai/${loadedData.openaiModel}`;
 					needsSave = true;
 				}
 			}
@@ -262,7 +274,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			this.settings.mode === AI_PROVIDERS.OPENROUTER &&
 			!this.settings.openRouterApiKey
 		) {
-			new Notice('Missing OpenRouter API Key - update in Prompt Assistant plugin settings');
+			new Notice('Missing OpenRouter API key - update in Prompt assistant plugin settings');
 			return;
 		}
 
@@ -307,22 +319,23 @@ export default class PromptAssistantPlugin extends Plugin {
 				prompt: this.settings.prompt,
 			});
 			response = res;
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error('Prompt Assistant error:', e);
 
 			let errorMsg = 'An error occurred while processing your request.';
+			const error = e as ApiError;
 
 			// Use the enhanced error message if available
-			if (e.message) {
-				errorMsg = e.message;
-			} else if (e.status) {
-				if (e.status === 401) {
+			if (error.message) {
+				errorMsg = error.message;
+			} else if (error.status) {
+				if (error.status === 401) {
 					errorMsg = 'Invalid API key. Please check your OpenRouter API key in settings.';
-				} else if (e.status === 404) {
+				} else if (error.status === 404) {
 					errorMsg = `Model '${selectedModel}' not found. Check the model name at https://openrouter.ai/models`;
-				} else if (e.status >= 400 && e.status < 500) {
+				} else if (error.status >= 400 && error.status < 500) {
 					errorMsg = `Unable to connect to OpenRouter.\n\nEnsure you have:\n- A valid OpenRouter API key\n- Credits in your OpenRouter account\n- The correct model name`;
-				} else if (e.status >= 500) {
+				} else if (error.status >= 500) {
 					errorMsg = 'OpenRouter service error. Please try again later.';
 				}
 			}
@@ -375,7 +388,7 @@ class MySettingTab extends PluginSettingTab {
 
 		// OPENROUTER MODEL
 		new Setting(containerEl)
-			.setName('OpenRouter Model')
+			.setName('OpenRouter model')
 			.setDesc('Enter model ID (e.g., openai/gpt-4o-mini, anthropic/claude-3.5-sonnet)')
 			.addText((text) =>
 				text
@@ -389,11 +402,11 @@ class MySettingTab extends PluginSettingTab {
 
 		// ASSISTANT NAME
 		new Setting(containerEl)
-			.setName('Assistant Name')
+			.setName('Assistant name')
 			.setDesc('Name that appears in responses (e.g., Assistant, Claude, GPT)')
 			.addText((text) =>
 				text
-					.setPlaceholder('Prompt Assistant')
+					.setPlaceholder('Prompt assistant')
 					.setValue(this.plugin.settings.assistantName)
 					.onChange(async (value) => {
 						this.plugin.settings.assistantName = value.trim() || 'Prompt Assistant';
@@ -403,11 +416,11 @@ class MySettingTab extends PluginSettingTab {
 
 		// OPENROUTER API KEY
 		new Setting(containerEl)
-			.setName('OpenRouter API Key')
+			.setName('OpenRouter API key')
 			.setDesc('Get your API key from OpenRouter')
 			.addText((text) =>
 				text
-					.setPlaceholder('Enter your API Key')
+					.setPlaceholder('Enter your API key')
 					.setValue(
 						this.plugin.settings.openRouterApiKey
 							? platformBasedSecrets.decrypt(this.plugin.settings.openRouterApiKey)
@@ -428,10 +441,10 @@ class MySettingTab extends PluginSettingTab {
 		const openRouterLinkboxEl = document.createElement('div');
 
 		const link = openRouterLinkboxEl.createEl('a');
-		link.textContent = 'Get OpenRouter API Key';
+		link.textContent = 'Get OpenRouter API key';
 		link.href = 'https://openrouter.ai/keys';
 		link.target = '_blank';
-		link.style.textDecoration = 'underline';
+		link.addClass('prompt-assistant-link');
 
 		openRouterLinkboxEl.createEl('br');
 
@@ -439,7 +452,7 @@ class MySettingTab extends PluginSettingTab {
 		modelsLink.textContent = 'Browse available models';
 		modelsLink.href = 'https://openrouter.ai/models';
 		modelsLink.target = '_blank';
-		modelsLink.style.textDecoration = 'underline';
+		modelsLink.addClass('prompt-assistant-link');
 
 		openRouterLinkboxEl.createEl('br');
 		openRouterLinkboxEl.createEl('br');
@@ -447,19 +460,18 @@ class MySettingTab extends PluginSettingTab {
 		containerEl.appendChild(openRouterLinkboxEl);
 
 		// CUSTOM PROMPTS SECTION
-		containerEl.createEl('h3', { text: 'Custom Prompts' });
-		containerEl.createEl('p', {
-			text: 'Create custom prompts with names. They will appear in the menu and as commands.',
-			cls: 'setting-item-description'
-		});
+		new Setting(containerEl)
+			.setName('Custom prompts')
+			.setDesc('Create custom prompts with names. They will appear in the menu and as commands.')
+			.setHeading();
 
 		// Add new prompt button
 		new Setting(containerEl)
-			.setName('Add Custom Prompt')
+			.setName('Add custom prompt')
 			.setDesc('Create a new custom prompt')
 			.addButton((button) =>
 				button
-					.setButtonText('Add Prompt')
+					.setButtonText('Add prompt')
 					.setCta()
 					.onClick(async () => {
 						const newPrompt: CustomPrompt = {
@@ -482,7 +494,7 @@ class MySettingTab extends PluginSettingTab {
 				.setDesc('Name')
 				.addText((text) =>
 					text
-						.setPlaceholder('Prompt Name')
+						.setPlaceholder('Prompt name')
 						.setValue(customPrompt.name)
 						.onChange(async (value) => {
 							customPrompt.name = value || 'Unnamed Prompt';
@@ -514,13 +526,13 @@ class MySettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						});
 					text.inputEl.rows = 3;
-					text.inputEl.style.width = '100%';
+					text.inputEl.setCssStyles({ width: '100%' });
 				});
 		});
 
 		// LANGUAGE
 		new Setting(containerEl)
-			.setName('Preferred Language (Beta)')
+			.setName('Preferred language (beta)')
 			.setDesc('For responses from the assistant')
 			.addDropdown((dropdown) => {
 				languages.forEach((lang) => {
@@ -537,7 +549,7 @@ class MySettingTab extends PluginSettingTab {
 
 		// SYSTEM PROMPT
 		const promptSetting = new Setting(containerEl)
-			.setName('Edit System Prompt')
+			.setName('Edit system prompt')
 			.setDesc('Customize the prompt that controls how the assistant responds to you')
 			.setClass('prompt-assistant-setting');
 
@@ -556,7 +568,7 @@ class MySettingTab extends PluginSettingTab {
 		const buttonContainer = containerEl.createDiv('prompt-assistant-button-container');
 
 		const resetButton = new Setting(buttonContainer).addButton((button) => {
-			button.setButtonText('Reset to Default').onClick(async () => {
+			button.setButtonText('Reset to default').onClick(async () => {
 				const confirmReset = confirm(
 					"Are you sure you want to reset the prompt to default? You'll lose your custom prompt.",
 				);
@@ -608,7 +620,7 @@ class MarkdownTextModel extends Modal {
 
 		const markdownContainer = contentEl.createDiv('markdown-container');
 
-		MarkdownRenderer.render(
+		void MarkdownRenderer.render(
 			this.app,
 			this.text,
 			markdownContainer,
