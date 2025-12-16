@@ -1,7 +1,7 @@
 {
 	"id": "ai-prompt-assistant",
 	"name": "AI Chat Assistant (OpenRouter)",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Assistant with customizable prompts for journaling, coaching, writing, and more using Openrouter (ChatGPT, DeekSeek, Gemini, etc.)",
 	"author": "shmlkv",
