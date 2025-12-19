@@ -74,7 +74,7 @@ Browse models at [openrouter.ai/models](https://openrouter.ai/models)
 ### Basic Chat
 
 1. Write something in a note
-2. Click the ribbon icon (❤️‍🩹) → select "Chat" or a custom prompt
+2. Click the plugin icon → select "Chat" or a custom prompt
 3. Continue the conversation by adding your responses at the bottom
 4. Use "Summarize" when you want a summary table
 
