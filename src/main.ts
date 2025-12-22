@@ -100,7 +100,7 @@ export default class PromptAssistantPlugin extends Plugin {
 		await this.loadSettings();
 		console.debug('[PromptAssistant] Settings loaded. Mode:', this.settings.mode, 'Model:', this.settings.openRouterModel || 'default');
 
-		this.addRibbonIcon('bot-message-square', 'AI Chat Assistant', (evt: MouseEvent) => {
+		this.addRibbonIcon('bot-message-square', 'Open AI chat assistant', (evt: MouseEvent) => {
 			const menu = new Menu();
 
 			menu.addItem((item) =>
@@ -259,7 +259,7 @@ export default class PromptAssistantPlugin extends Plugin {
 
 		if (!Object.values(AI_PROVIDERS).includes(this.settings.mode)) {
 			new Notice(
-				`Invalid mode '${this.settings.mode}' detected. Update in AI Chat Assistant plugin settings and select a valid mode`,
+				`Invalid mode '${this.settings.mode}' detected. Update in plugin settings and select a valid mode.`,
 			);
 			return;
 		}
@@ -268,7 +268,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			this.settings.mode === AI_PROVIDERS.OPENROUTER &&
 			!this.settings.openRouterApiKey
 		) {
-			new Notice('Missing OpenRouter API key. Update in AI Chat Assistant plugin settings.');
+			new Notice('Missing OpenRouter API key. Update in plugin settings.');
 			return;
 		}
 
@@ -314,7 +314,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			});
 			response = res;
 		} catch (e: unknown) {
-			console.error('AI Chat Assistant error:', e);
+			console.error('[PromptAssistant] Error:', e);
 
 			let errorMsg = 'An error occurred while processing your request.';
 			const error = e as ApiError;
@@ -334,7 +334,7 @@ export default class PromptAssistantPlugin extends Plugin {
 				}
 			}
 
-			new Notice(`AI Chat Assistant error: ${errorMsg}`, 10000);
+			new Notice(`Error: ${errorMsg}`, 10000);
 		} finally {
 			loadingModal.close();
 		}
