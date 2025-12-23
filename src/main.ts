@@ -268,7 +268,7 @@ export default class PromptAssistantPlugin extends Plugin {
 			this.settings.mode === AI_PROVIDERS.OPENROUTER &&
 			!this.settings.openRouterApiKey
 		) {
-			new Notice('Missing OpenRouter API key. Update in plugin settings.');
+			new Notice('Missing API key. Update in plugin settings.');
 			return;
 		}
 
@@ -383,7 +383,7 @@ class MySettingTab extends PluginSettingTab {
 		// ASSISTANT NAME
 		new Setting(containerEl)
 			.setName('Assistant name')
-			.setDesc('Name that appears in responses (e.g., Assistant, Claude, GPT)')
+			.setDesc('Name that appears before each response')
 			.addText((text) =>
 				text
 					.setPlaceholder('Assistant')
@@ -396,7 +396,7 @@ class MySettingTab extends PluginSettingTab {
 
 		// OPENROUTER MODEL
 		new Setting(containerEl)
-			.setName('OpenRouter model')
+			.setName('Model')
 			.setDesc('Enter model ID (e.g., openai/gpt-4o-mini, anthropic/claude-3.5-sonnet)')
 			.addText((text) =>
 				text
@@ -419,8 +419,8 @@ class MySettingTab extends PluginSettingTab {
 
 		// OPENROUTER API KEY
 		new Setting(containerEl)
-			.setName('OpenRouter API key')
-			.setDesc('Get your API key from OpenRouter')
+			.setName('API key')
+			.setDesc('Your key from openrouter.ai')
 			.addText((text) =>
 				text
 					.setPlaceholder('Enter your API key')
@@ -443,7 +443,7 @@ class MySettingTab extends PluginSettingTab {
 
 		const apiKeyLinkEl = containerEl.createEl('a', {
 			href: 'https://openrouter.ai/keys',
-			text: 'Get OpenRouter API key',
+			text: 'Get your API key',
 		});
 		apiKeyLinkEl.target = '_blank';
 		apiKeyLinkEl.addClass('prompt-assistant-link');
